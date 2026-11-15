@@ -1,0 +1,38 @@
+steps:
+  # Build the frontend container image from repository root with VITE_API_URL build argument
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'VITE_API_URL=$_VITE_API_URL'
+      - '-t'
+      - '$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/carebridge-frontend:$COMMIT_SHA'
+      - '-t'
+      - '$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/carebridge-frontend:latest'
+      - '-f'
+      - 'frontend/Dockerfile'
+      - 'frontend'
+
+  # Push commit SHA tagged image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/carebridge-frontend:$COMMIT_SHA'
+
+  # Push latest tagged image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/carebridge-frontend:latest'
+
+images:
+  - '$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/carebridge-frontend:$COMMIT_SHA'
+  - '$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/carebridge-frontend:latest'
+
+substitutions:
+  _REGION: 'asia-south1'
+  _REPOSITORY: 'carebridge-repo'
+  _VITE_API_URL: 'https://carebridgeai-20235025853.asia-south1.run.app'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

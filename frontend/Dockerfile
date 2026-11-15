@@ -3,16 +3,16 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Copy package management definitions
+# Copy dependency specifications
 COPY package*.json ./
 
 # Deterministic package installation
 RUN npm ci
 
-# Copy frontend source code
+# Copy application source files
 COPY . .
 
-# Build-time argument for backend API URL
+# Build-time argument for production backend URL
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
@@ -35,4 +35,3 @@ COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]
-
