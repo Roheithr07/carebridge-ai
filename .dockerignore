@@ -1,0 +1,47 @@
+# Git & OS metadata
+.git/
+.gitignore
+.DS_Store
+Thumbs.db
+*.log
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
+
+# Databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+backend/*.db
+backend/*.sqlite*
+
+# Virtual environments & Python cache
+venv/
+.venv/
+env/
+backend/venv/
+backend/.venv/
+backend/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Test caches & test suite
+.pytest_cache/
+.coverage
+htmlcov/
+backend/.pytest_cache/
+backend/tests/
+
+# Frontend (not needed for backend container)
+frontend/
+node_modules/
+dist/

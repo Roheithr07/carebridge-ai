@@ -11,7 +11,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 # 24 hours
     ALGORITHM: str = "HS256"
 
-    # Database
+    # Environment & Cloud Run Server Configuration
+    ENVIRONMENT: str = "development" # "development" | "production"
+    PORT: int = 8080
+    AUTO_SEED_DEMO_DATA: bool = True
+
+    # Database Configuration (Supports SQLite and Cloud SQL / PostgreSQL)
     DATABASE_URL: str = "sqlite:///./carebridge.db"
 
     # Notification & Reminders
@@ -31,7 +36,7 @@ class Settings(BaseSettings):
     AI_API_KEY: str = ""
     GROK_API_KEY: str = ""
 
-    # CORS
+    # CORS Configuration
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
@@ -46,6 +51,26 @@ class Settings(BaseSettings):
         "https://carebridge-ai.vercel.app"
     ]
 
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str):
+            v_strip = v.strip()
+            if not v_strip:
+                return []
+            if v_strip.startswith("[") and v_strip.endswith("]"):
+                import json
+                try:
+                    parsed = json.loads(v_strip)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except Exception:
+                    pass
+            return [i.strip() for i in v_strip.split(",") if i.strip()]
+        elif isinstance(v, list):
+            return [str(item).strip() for item in v if str(item).strip()]
+        return []
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -55,4 +80,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-

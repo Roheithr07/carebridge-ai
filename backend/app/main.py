@@ -37,13 +37,14 @@ def background_reminder_worker():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Ensure tables exist & seed demo data
+    # Startup: Ensure tables exist & conditionally seed demo data
     logger.info("Initializing CareBridge AI database tables...")
     Base.metadata.create_all(bind=engine)
-    try:
-        seed_demo_database()
-    except Exception as e:
-        logger.error(f"Error during seed: {e}")
+    if settings.AUTO_SEED_DEMO_DATA:
+        try:
+            seed_demo_database()
+        except Exception as e:
+            logger.error(f"Error during seed: {e}")
 
     # Start background reminder worker thread
     global _scheduler_running
@@ -67,11 +68,15 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS configuration - supports development ports and production domains
+# CORS configuration: removes localhost-specific assumptions from production
+allow_origin_regex = None
+if settings.ENVIRONMENT == "development":
+    allow_origin_regex = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS if settings.CORS_ORIGINS else ["*"],
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -103,6 +108,7 @@ def root():
 
 @app.get("/health")
 def health_check():
+    """Health-check endpoint for Cloud Run container liveness and startup probes."""
     return {"status": "ok", "service": "carebridge-backend"}
 
 
@@ -113,4 +119,3 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "An internal server error occurred. Please try again later."}
     )
-
